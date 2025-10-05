@@ -134,6 +134,52 @@ Create a `.env` file in the project root (use `.env.example` as a template):
 UP_PERSONAL_ACCESS_TOKEN=your_token_here
 ```
 
+## Using with Claude Desktop
+
+To use this MCP server with Claude Desktop, add it to your Claude Desktop configuration file:
+
+**Location:** `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
+
+### Option 1: Using npx (Recommended - once published)
+
+```json
+{
+  "mcpServers": {
+    "up-banking": {
+      "command": "npx",
+      "args": ["-y", "up-mcp@latest"],
+      "env": {
+        "UP_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+### Option 2: Local Development
+
+```json
+{
+  "mcpServers": {
+    "up-banking": {
+      "command": "node",
+      "args": ["/absolute/path/to/up-mcp/dist/index.js"],
+      "env": {
+        "UP_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+**Important:**
+- Replace `your_token_here` with your actual Up Personal Access Token (see [Getting Your Up Personal Access Token](#getting-your-up-personal-access-token))
+- For local development, replace `/absolute/path/to/up-mcp` with the full path to your cloned repository
+- If using a Node.js version manager (nvm, mise, etc.), you may need to use the full path to `node` (find it with `which node`)
+- Restart Claude Desktop after updating the configuration
+
+After configuration, you'll have access to all 12 Up Banking tools within Claude Desktop conversations.
+
 ## Development
 
 ```bash
@@ -241,7 +287,7 @@ For more information about the Up Banking API, visit:
 
 ## License
 
-ISC
+MIT
 
 ## Links
 
@@ -249,3 +295,4 @@ ISC
 - [GitHub Repository](https://github.com/wakeless/up-mcp)
 - [Up Banking](https://up.com.au/)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
+- Development sponsored by [Github and Slack Integration](https://pipie.io)[
