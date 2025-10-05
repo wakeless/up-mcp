@@ -41,4 +41,54 @@ describe('UpApiClient', () => {
       expect(client.getBaseUrl()).toBe('https://api.up.com.au/api/v1');
     });
   });
+
+  describe('API methods', () => {
+    describe('getTransaction', () => {
+      it('should have getTransaction method', () => {
+        expect(typeof client.getTransaction).toBe('function');
+      });
+    });
+
+    describe('getAccountTransactions', () => {
+      it('should have getAccountTransactions method', () => {
+        expect(typeof client.getAccountTransactions).toBe('function');
+      });
+    });
+
+    describe('getCategories', () => {
+      it('should have getCategories method', () => {
+        expect(typeof client.getCategories).toBe('function');
+      });
+    });
+
+    describe('getCategory', () => {
+      it('should have getCategory method', () => {
+        expect(typeof client.getCategory).toBe('function');
+      });
+    });
+
+    describe('updateTransactionCategory', () => {
+      it('should have updateTransactionCategory method', () => {
+        expect(typeof client.updateTransactionCategory).toBe('function');
+      });
+    });
+
+    describe('getTags', () => {
+      it('should have getTags method', () => {
+        expect(typeof client.getTags).toBe('function');
+      });
+    });
+
+    describe('addTransactionTags', () => {
+      it('should have addTransactionTags method', () => {
+        expect(typeof client.addTransactionTags).toBe('function');
+      });
+    });
+
+    describe('removeTransactionTags', () => {
+      it('should have removeTransactionTags method', () => {
+        expect(typeof client.removeTransactionTags).toBe('function');
+      });
+    });
+  });
 });

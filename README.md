@@ -8,28 +8,31 @@
 
 - 🏦 **Account Management**: List and retrieve Up bank accounts
 - 💰 **Transaction History**: Access transaction data with filtering options
+- 🏷️ **Categories & Tags**: Manage transaction categories and tags
 - 🔐 **Secure Authentication**: Uses Up Personal Access Tokens
-- 🛠️ **Type-Safe**: Built with TypeScript and OpenAPI-generated types
-- ✅ **Well-Tested**: Comprehensive test coverage with vitest
 - 📡 **MCP Compatible**: Works with any MCP-compatible client
 
 ## Available Tools
 
-The server exposes the following MCP tools:
+The server exposes **12 MCP tools** for interacting with the Up Banking API:
 
-### `list_accounts`
+### Account Tools
+
+#### `list_accounts`
 List all Up bank accounts for the authenticated user.
 
 **Parameters:**
 - `accountType` (optional): Filter by account type (`SAVER` or `TRANSACTIONAL`)
 
-### `get_account`
+#### `get_account`
 Get details of a specific Up bank account by ID.
 
 **Parameters:**
 - `accountId` (required): The unique identifier for the account
 
-### `list_transactions`
+### Transaction Tools
+
+#### `list_transactions`
 List transactions from Up bank accounts.
 
 **Parameters:**
@@ -38,7 +41,69 @@ List transactions from Up bank accounts.
 - `until` (optional): Filter transactions before this date (ISO 8601)
 - `pageSize` (optional): Number of records to return (max 100)
 
-### `ping`
+#### `get_transaction`
+Get details of a specific transaction by ID.
+
+**Parameters:**
+- `transactionId` (required): The unique identifier for the transaction
+
+#### `get_account_transactions`
+Get transactions for a specific account.
+
+**Parameters:**
+- `accountId` (required): The account ID to get transactions for
+- `since` (optional): Filter transactions after this date (ISO 8601)
+- `until` (optional): Filter transactions before this date (ISO 8601)
+- `pageSize` (optional): Number of records to return (max 100)
+
+### Category Tools
+
+#### `list_categories`
+List all categories and subcategories available in Up.
+
+**Parameters:**
+- `parent` (optional): Filter by parent category ID
+
+#### `get_category`
+Get details of a specific category by ID.
+
+**Parameters:**
+- `categoryId` (required): The unique identifier for the category
+
+#### `update_transaction_category`
+Update or remove the category associated with a transaction.
+
+**Parameters:**
+- `transactionId` (required): The transaction ID to update
+- `categoryId` (required): The category ID to assign, or `null` to remove category
+
+**Note:** Only works for settled transactions (status `SETTLED`), not pending/held transactions.
+
+### Tag Tools
+
+#### `list_tags`
+List all tags currently in use.
+
+**Parameters:**
+- `pageSize` (optional): Number of records to return
+
+#### `add_transaction_tags`
+Add one or more tags to a transaction.
+
+**Parameters:**
+- `transactionId` (required): The transaction ID to tag
+- `tags` (required): Array of tag IDs to add (e.g., `["holiday", "dinner"]`)
+
+#### `remove_transaction_tags`
+Remove one or more tags from a transaction.
+
+**Parameters:**
+- `transactionId` (required): The transaction ID to untag
+- `tags` (required): Array of tag IDs to remove
+
+### Utility Tools
+
+#### `ping`
 Test connectivity to the Up API.
 
 ## Prerequisites
@@ -180,6 +245,7 @@ ISC
 
 ## Links
 
+- [Michael Gall's blog](https://wakeless.net)
 - [GitHub Repository](https://github.com/wakeless/up-mcp)
 - [Up Banking](https://up.com.au/)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
