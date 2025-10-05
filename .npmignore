@@ -1,0 +1,51 @@
+# Source files
+src/
+tsconfig.json
+vitest.config.ts
+
+# Test files
+**/*.test.ts
+**/*.test.js
+*.test.ts
+*.test.js
+test-*.js
+
+# Development files
+.env
+.env.local
+.env.example
+
+# Build tools
+eslint.config.js
+.prettierrc
+
+# Documentation (keep README.md and LICENSE)
+TODO.md
+CLAUDE.md
+CLAUDE_DESKTOP_SETUP.md
+SETUP_COMPLETE.md
+VALIDATION_RESULTS.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# Node
+node_modules/
