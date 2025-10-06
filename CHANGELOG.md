@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-10-06
+
+### Added
+- **MCP Resources** capability for read-only contextual access to banking data
+  - Added `resources` capability to server
+  - Imported `ListResourcesRequestSchema` and `ReadResourceRequestSchema` from MCP SDK
+  - Implemented `resources/list` handler exposing 4 static resources and 2 resource templates
+  - Implemented `resources/read` handler with URI parsing and routing logic
+  - Added pagination support to `resources/list` handler for MCP spec compliance
+- **Static Resources**:
+  - `up://accounts` - List of all Up bank accounts (fetches all pages)
+  - `up://transactions/recent` - The 10 most recent transactions
+  - `up://categories` - List of all transaction categories
+  - `up://tags` - All tags currently in use (fetches all pages)
+- **Resource Templates** (dynamic resources):
+  - `up://account/{accountId}` - Details of a specific account by ID
+  - `up://transaction/{transactionId}` - Details of a specific transaction by ID
+- **Helper function** `fetchAllPages()` to automatically retrieve all paginated API results
+- Comprehensive test suite for resources (`src/resources.test.ts`)
+- Updated README with MCP Resources documentation and usage examples
+
+### Changed
+- Resources complement tools - tools for actions, resources for passive context
+- All resources return JSON data with `application/json` MIME type
+- Resources now fetch **all pages** of data automatically for complete datasets
+- `up://accounts` and `up://tags` now return complete data across all API pages
+- Test count increased from 30+ to 40+ tests
+- Updated resource tests to verify pagination behavior
+
 ## [0.3.0] - 2025-10-06
 
 ### Added

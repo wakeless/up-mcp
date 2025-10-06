@@ -7,7 +7,12 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 import { getConfig } from './env.js';
 import { UpApiClient } from './client.js';
 import * as schemas from './schemas.js';
@@ -15,6 +20,28 @@ import * as schemas from './schemas.js';
 // Initialize configuration and client
 const config = getConfig();
 const upClient = new UpApiClient(config.personalAccessToken);
+
+/**
+ * Helper function to fetch all pages of a paginated API response
+ * @param fetchFn Function that fetches a page given a cursor
+ * @returns Array of all data items across all pages
+ */
+async function fetchAllPages<T extends { data: unknown[]; links?: { next?: string | null } }>(
+  fetchFn: (cursor?: string) => Promise<T>
+): Promise<T['data']> {
+  const allData: T['data'] = [];
+  let cursor: string | null = null;
+
+  do {
+    const response = await fetchFn(cursor || undefined);
+    allData.push(...response.data);
+
+    // Extract cursor from next link
+    cursor = UpApiClient.extractCursor(response.links?.next ?? null);
+  } while (cursor !== null);
+
+  return allData;
+}
 
 // Create MCP server
 const server = new Server(
@@ -25,6 +52,7 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
+      resources: {},
     },
   }
 );
@@ -266,6 +294,169 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
     ],
   };
+});
+
+// List available resources
+server.setRequestHandler(ListResourcesRequestSchema, async (request) => {
+  // Note: We have a small, static list of resources, so pagination isn't strictly necessary
+  // But we implement it for spec compliance
+  const allResources = [
+    {
+      uri: 'up://accounts',
+      name: 'All Accounts',
+      description: 'List of all Up bank accounts',
+      mimeType: 'application/json',
+    },
+    {
+      uri: 'up://transactions/recent',
+      name: 'Latest Transactions',
+      description: 'The 10 most recent transactions',
+      mimeType: 'application/json',
+    },
+    {
+      uri: 'up://categories',
+      name: 'All Categories',
+      description: 'List of all transaction categories',
+      mimeType: 'application/json',
+    },
+    {
+      uri: 'up://tags',
+      name: 'All Tags',
+      description: 'List of all tags currently in use',
+      mimeType: 'application/json',
+    },
+  ];
+
+  const allResourceTemplates = [
+    {
+      uriTemplate: 'up://account/{accountId}',
+      name: 'Account Details',
+      description: 'Details of a specific account by ID',
+      mimeType: 'application/json',
+    },
+    {
+      uriTemplate: 'up://transaction/{transactionId}',
+      name: 'Transaction Details',
+      description: 'Details of a specific transaction by ID',
+      mimeType: 'application/json',
+    },
+  ];
+
+  // Simple pagination support (though not needed for our small list)
+  const cursor = request.params?.cursor;
+
+  // Since we have a small static list, we return everything on first page
+  if (!cursor) {
+    return {
+      resources: allResources,
+      resourceTemplates: allResourceTemplates,
+      // No nextCursor since all resources fit on one page
+    };
+  }
+
+  // If cursor is provided but we don't recognize it, return empty
+  return {
+    resources: [],
+    resourceTemplates: [],
+  };
+});
+
+// Read resource contents
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  const uri = request.params.uri;
+
+  try {
+    // Parse URI and route to appropriate handler
+    if (uri === 'up://accounts') {
+      // Fetch all accounts across all pages
+      const allAccounts = await fetchAllPages((cursor) => upClient.getAccounts({ cursor }));
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify({ data: allAccounts }, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (uri.startsWith('up://account/')) {
+      const accountId = uri.replace('up://account/', '');
+      const response = await upClient.getAccount(accountId);
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (uri === 'up://transactions/recent') {
+      // Get last 10 transactions
+      const response = await upClient.getTransactions({
+        pageSize: 10,
+      });
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (uri.startsWith('up://transaction/')) {
+      const transactionId = uri.replace('up://transaction/', '');
+      const response = await upClient.getTransaction(transactionId);
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (uri === 'up://categories') {
+      const response = await upClient.getCategories({});
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(response, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (uri === 'up://tags') {
+      // Fetch all tags across all pages
+      const allTags = await fetchAllPages((cursor) => upClient.getTags({ cursor }));
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify({ data: allTags }, null, 2),
+          },
+        ],
+      };
+    }
+
+    throw new Error(`Unknown resource URI: ${uri}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to read resource ${uri}: ${errorMessage}`);
+  }
 });
 
 // Handle tool calls
