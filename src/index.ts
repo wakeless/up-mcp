@@ -280,6 +280,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
 
         return {
+          content: [],
           structuredContent: {
             ...response,
             pagination: {
@@ -297,6 +298,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getAccount(accountId);
         return {
+          content: [],
           structuredContent: response,
         };
       }
@@ -313,6 +315,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
 
         return {
+          content: [],
           structuredContent: {
             ...response,
             pagination: {
@@ -330,6 +333,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getTransaction(transactionId);
         return {
+          content: [],
           structuredContent: response,
         };
       }
@@ -354,6 +358,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
 
         return {
+          content: [],
           structuredContent: {
             ...response,
             pagination: {
@@ -369,6 +374,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const response = await upClient.getCategories({ parent });
 
         return {
+          content: [],
           structuredContent: response,
         };
       }
@@ -380,6 +386,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getCategory(categoryId);
         return {
+          content: [],
           structuredContent: response,
         };
       }
@@ -394,6 +401,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         await upClient.updateTransactionCategory(transactionId, categoryId);
         return {
+          content: [],
           structuredContent: {
             success: true,
             transactionId,
@@ -409,6 +417,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
 
         return {
+          content: [],
           structuredContent: {
             ...response,
             pagination: {
@@ -432,6 +441,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           tags.map((id) => ({ id }))
         );
         return {
+          content: [],
           structuredContent: {
             success: true,
             transactionId,
@@ -454,6 +464,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           tags.map((id) => ({ id }))
         );
         return {
+          content: [],
           structuredContent: {
             success: true,
             transactionId,
@@ -466,6 +477,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'ping': {
         const result = await upClient.ping();
         return {
+          content: [],
           structuredContent: {
             success: result,
             message: result ? 'Connection successful' : 'Connection failed',
