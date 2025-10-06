@@ -166,7 +166,7 @@ export class UpApiClient {
     if (params?.accountId) searchParams.append('filter[accountId]', params.accountId);
     if (params?.since) searchParams.append('filter[since]', params.since);
     if (params?.until) searchParams.append('filter[until]', params.until);
-    if (params?.pageSize) searchParams.append('page[size]', params.pageSize.toString());
+    searchParams.append('page[size]', (params?.pageSize ?? 25).toString());
     if (params?.cursor) searchParams.append('page[after]', params.cursor);
 
     const query = searchParams.toString();
@@ -200,7 +200,7 @@ export class UpApiClient {
     const searchParams = new URLSearchParams();
     if (params?.since) searchParams.append('filter[since]', params.since);
     if (params?.until) searchParams.append('filter[until]', params.until);
-    if (params?.pageSize) searchParams.append('page[size]', params.pageSize.toString());
+    searchParams.append('page[size]', (params?.pageSize ?? 25).toString());
     if (params?.cursor) searchParams.append('page[after]', params.cursor);
 
     const query = searchParams.toString();
@@ -253,7 +253,7 @@ export class UpApiClient {
       paths['/tags']['get']['responses'][200]['content']['application/json'];
 
     const searchParams = new URLSearchParams();
-    if (params?.pageSize) searchParams.append('page[size]', params.pageSize.toString());
+    searchParams.append('page[size]', (params?.pageSize ?? 25).toString());
     if (params?.cursor) searchParams.append('page[after]', params.cursor);
 
     const query = searchParams.toString();
