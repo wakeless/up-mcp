@@ -11,9 +11,10 @@
 - 🏷️ **Categories & Tags**: Manage transaction categories and tags
 - 📄 **Cursor-Based Pagination**: Navigate through large result sets efficiently
 - 📊 **Structured Content**: All tools return typed JSON objects with output schemas
+- 📚 **MCP Resources**: Read-only context URIs for accessing banking data without explicit tool calls
 - 🔐 **Secure Authentication**: Uses Up Personal Access Tokens
 - 📡 **MCP Compatible**: Works with any MCP-compatible client
-- ✅ **Comprehensive Testing**: 30+ tests covering unit and integration scenarios
+- ✅ **Comprehensive Testing**: 40+ tests covering unit and integration scenarios
 
 ## Available Tools
 
@@ -150,6 +151,40 @@ All tools return structured JSON objects via the `structuredContent` field:
 - **Consistent Format**: Responses follow the JSON:API specification used by Up Banking
 - **Direct Access**: No need to parse JSON strings - data is returned as native objects
 - **Pagination Metadata**: Paginated responses include cursor information for easy navigation
+
+## MCP Resources
+
+In addition to tools, this server exposes **MCP Resources** - read-only URIs that provide contextual access to your banking data. Resources are perfect for when you want to give Claude passive access to your data without requiring explicit tool calls.
+
+### Available Resources
+
+#### Static Resources
+
+- **`up://accounts`** - List of all Up bank accounts
+- **`up://transactions/recent`** - The 10 most recent transactions
+- **`up://categories`** - List of all transaction categories
+- **`up://tags`** - List of all tags currently in use
+
+#### Resource Templates (Dynamic Resources)
+
+- **`up://account/{accountId}`** - Details of a specific account (replace `{accountId}` with actual account ID)
+- **`up://transaction/{transactionId}`** - Details of a specific transaction (replace `{transactionId}` with actual transaction ID)
+
+### Resources vs Tools
+
+**When to use Resources:**
+- Getting account/transaction data for context
+- Reading-only operations
+- When you want Claude to automatically access data without explicit prompting
+
+**When to use Tools:**
+- Modifying data (updating categories, adding/removing tags)
+- Fine-grained filtering and pagination
+- Explicit, action-oriented operations
+
+**Example:**
+
+Instead of calling the `list_accounts` tool, Claude can directly access the `up://accounts` resource for passive context. Resources return the same JSON:API formatted data as tools, but are optimized for providing context rather than performing actions.
 
 ## Prerequisites
 
