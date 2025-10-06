@@ -278,16 +278,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { cursor } = args as { cursor?: string };
         const response = await upClient.getAccounts({ cursor });
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+        const structuredData = {
+          ...response,
+          pagination: {
+            nextCursor,
+            prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          },
+        };
 
         return {
-          content: [],
-          structuredContent: {
-            ...response,
-            pagination: {
-              nextCursor,
-              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
             },
-          },
+          ],
+          structuredContent: structuredData,
         };
       }
 
@@ -298,7 +304,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getAccount(accountId);
         return {
-          content: [],
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response, null, 2),
+            },
+          ],
           structuredContent: response,
         };
       }
@@ -313,16 +324,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
         const response = await upClient.getTransactions(params);
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+        const structuredData = {
+          ...response,
+          pagination: {
+            nextCursor,
+            prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          },
+        };
 
         return {
-          content: [],
-          structuredContent: {
-            ...response,
-            pagination: {
-              nextCursor,
-              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
             },
-          },
+          ],
+          structuredContent: structuredData,
         };
       }
 
@@ -333,7 +350,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getTransaction(transactionId);
         return {
-          content: [],
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response, null, 2),
+            },
+          ],
           structuredContent: response,
         };
       }
@@ -356,16 +378,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           cursor,
         });
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+        const structuredData = {
+          ...response,
+          pagination: {
+            nextCursor,
+            prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          },
+        };
 
         return {
-          content: [],
-          structuredContent: {
-            ...response,
-            pagination: {
-              nextCursor,
-              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
             },
-          },
+          ],
+          structuredContent: structuredData,
         };
       }
 
@@ -374,7 +402,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const response = await upClient.getCategories({ parent });
 
         return {
-          content: [],
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response, null, 2),
+            },
+          ],
           structuredContent: response,
         };
       }
@@ -386,7 +419,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getCategory(categoryId);
         return {
-          content: [],
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(response, null, 2),
+            },
+          ],
           structuredContent: response,
         };
       }
@@ -400,14 +438,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           throw new Error('transactionId and categoryId are required');
         }
         await upClient.updateTransactionCategory(transactionId, categoryId);
+        const structuredData = {
+          success: true,
+          transactionId,
+          categoryId,
+          message: `Category ${categoryId ? 'updated to ' + categoryId : 'removed'} for transaction ${transactionId}`,
+        };
         return {
-          content: [],
-          structuredContent: {
-            success: true,
-            transactionId,
-            categoryId,
-            message: `Category ${categoryId ? 'updated to ' + categoryId : 'removed'} for transaction ${transactionId}`,
-          },
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
+            },
+          ],
+          structuredContent: structuredData,
         };
       }
 
@@ -415,16 +459,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { pageSize, cursor } = args as { pageSize?: number; cursor?: string };
         const response = await upClient.getTags({ pageSize, cursor });
         const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+        const structuredData = {
+          ...response,
+          pagination: {
+            nextCursor,
+            prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          },
+        };
 
         return {
-          content: [],
-          structuredContent: {
-            ...response,
-            pagination: {
-              nextCursor,
-              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
             },
-          },
+          ],
+          structuredContent: structuredData,
         };
       }
 
@@ -440,14 +490,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           transactionId,
           tags.map((id) => ({ id }))
         );
+        const structuredData = {
+          success: true,
+          transactionId,
+          tags,
+          message: `Added ${tags.length} tag(s) to transaction ${transactionId}`,
+        };
         return {
-          content: [],
-          structuredContent: {
-            success: true,
-            transactionId,
-            tags,
-            message: `Added ${tags.length} tag(s) to transaction ${transactionId}`,
-          },
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
+            },
+          ],
+          structuredContent: structuredData,
         };
       }
 
@@ -463,25 +519,37 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           transactionId,
           tags.map((id) => ({ id }))
         );
+        const structuredData = {
+          success: true,
+          transactionId,
+          tags,
+          message: `Removed ${tags.length} tag(s) from transaction ${transactionId}`,
+        };
         return {
-          content: [],
-          structuredContent: {
-            success: true,
-            transactionId,
-            tags,
-            message: `Removed ${tags.length} tag(s) from transaction ${transactionId}`,
-          },
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
+            },
+          ],
+          structuredContent: structuredData,
         };
       }
 
       case 'ping': {
         const result = await upClient.ping();
+        const structuredData = {
+          success: result,
+          message: result ? 'Connection successful' : 'Connection failed',
+        };
         return {
-          content: [],
-          structuredContent: {
-            success: result,
-            message: result ? 'Connection successful' : 'Connection failed',
-          },
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(structuredData, null, 2),
+            },
+          ],
+          structuredContent: structuredData,
         };
       }
 
