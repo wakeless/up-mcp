@@ -10,6 +10,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { getConfig } from './env.js';
 import { UpApiClient } from './client.js';
+import * as schemas from './schemas.js';
 
 // Initialize configuration and client
 const config = getConfig();
@@ -43,8 +44,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: 'Filter by account type (SAVER or TRANSACTIONAL)',
               enum: ['SAVER', 'TRANSACTIONAL'],
             },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor to fetch the next page of results',
+            },
           },
         },
+        outputSchema: schemas.listAccountsOutputSchema,
       },
       {
         name: 'get_account',
@@ -59,6 +65,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['accountId'],
         },
+        outputSchema: schemas.getAccountOutputSchema,
       },
       {
         name: 'list_transactions',
@@ -83,8 +90,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: 'number',
               description: 'Number of records to return (max 100)',
             },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor to fetch the next page of results',
+            },
           },
         },
+        outputSchema: schemas.listTransactionsOutputSchema,
       },
       {
         name: 'get_transaction',
@@ -99,6 +111,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['transactionId'],
         },
+        outputSchema: schemas.getTransactionOutputSchema,
       },
       {
         name: 'get_account_transactions',
@@ -122,13 +135,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: 'number',
               description: 'Number of records to return (max 100)',
             },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor to fetch the next page of results',
+            },
           },
           required: ['accountId'],
         },
+        outputSchema: schemas.listTransactionsOutputSchema,
       },
       {
         name: 'list_categories',
-        description: 'List all categories and subcategories available in Up',
+        description: 'List all categories and subcategories available in Up (not paginated)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -138,6 +156,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
         },
+        outputSchema: schemas.listCategoriesOutputSchema,
       },
       {
         name: 'get_category',
@@ -152,6 +171,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['categoryId'],
         },
+        outputSchema: schemas.getCategoryOutputSchema,
       },
       {
         name: 'update_transaction_category',
@@ -171,6 +191,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['transactionId', 'categoryId'],
         },
+        outputSchema: schemas.updateTransactionCategoryOutputSchema,
       },
       {
         name: 'list_tags',
@@ -182,8 +203,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: 'number',
               description: 'Number of records to return',
             },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor to fetch the next page of results',
+            },
           },
         },
+        outputSchema: schemas.listTagsOutputSchema,
       },
       {
         name: 'add_transaction_tags',
@@ -205,6 +231,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['transactionId', 'tags'],
         },
+        outputSchema: schemas.addTransactionTagsOutputSchema,
       },
       {
         name: 'remove_transaction_tags',
@@ -226,6 +253,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['transactionId', 'tags'],
         },
+        outputSchema: schemas.removeTransactionTagsOutputSchema,
       },
       {
         name: 'ping',
@@ -234,6 +262,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: 'object',
           properties: {},
         },
+        outputSchema: schemas.pingOutputSchema,
       },
     ],
   };
@@ -246,14 +275,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case 'list_accounts': {
-        const response = await upClient.getAccounts();
+        const { cursor } = args as { cursor?: string };
+        const response = await upClient.getAccounts({ cursor });
+        const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
+          structuredContent: {
+            ...response,
+            pagination: {
+              nextCursor,
+              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
             },
-          ],
+          },
         };
       }
 
@@ -264,12 +297,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getAccount(accountId);
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
+          structuredContent: response,
         };
       }
 
@@ -279,15 +307,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           since?: string;
           until?: string;
           pageSize?: number;
+          cursor?: string;
         };
         const response = await upClient.getTransactions(params);
+        const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
+          structuredContent: {
+            ...response,
+            pagination: {
+              nextCursor,
+              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
             },
-          ],
+          },
         };
       }
 
@@ -298,21 +330,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getTransaction(transactionId);
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
+          structuredContent: response,
         };
       }
 
       case 'get_account_transactions': {
-        const { accountId, since, until, pageSize } = args as {
+        const { accountId, since, until, pageSize, cursor } = args as {
           accountId: string;
           since?: string;
           until?: string;
           pageSize?: number;
+          cursor?: string;
         };
         if (!accountId) {
           throw new Error('accountId is required');
@@ -321,27 +349,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           since,
           until,
           pageSize,
+          cursor,
         });
+        const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
+          structuredContent: {
+            ...response,
+            pagination: {
+              nextCursor,
+              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
             },
-          ],
+          },
         };
       }
 
       case 'list_categories': {
         const { parent } = args as { parent?: string };
-        const response = await upClient.getCategories(parent ? { parent } : undefined);
+        const response = await upClient.getCategories({ parent });
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
+          structuredContent: response,
         };
       }
 
@@ -352,12 +380,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         const response = await upClient.getCategory(categoryId);
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
+          structuredContent: response,
         };
       }
 
@@ -371,25 +394,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         await upClient.updateTransactionCategory(transactionId, categoryId);
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Category ${categoryId ? 'updated to ' + categoryId : 'removed'} for transaction ${transactionId}`,
-            },
-          ],
+          structuredContent: {
+            success: true,
+            transactionId,
+            categoryId,
+            message: `Category ${categoryId ? 'updated to ' + categoryId : 'removed'} for transaction ${transactionId}`,
+          },
         };
       }
 
       case 'list_tags': {
-        const { pageSize } = args as { pageSize?: number };
-        const response = await upClient.getTags(pageSize ? { pageSize } : undefined);
+        const { pageSize, cursor } = args as { pageSize?: number; cursor?: string };
+        const response = await upClient.getTags({ pageSize, cursor });
+        const nextCursor = UpApiClient.extractCursor(response.links?.next ?? null);
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response, null, 2),
+          structuredContent: {
+            ...response,
+            pagination: {
+              nextCursor,
+              prevCursor: UpApiClient.extractCursor(response.links?.prev ?? null),
             },
-          ],
+          },
         };
       }
 
@@ -406,12 +432,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           tags.map((id) => ({ id }))
         );
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Added ${tags.length} tag(s) to transaction ${transactionId}`,
-            },
-          ],
+          structuredContent: {
+            success: true,
+            transactionId,
+            tags,
+            message: `Added ${tags.length} tag(s) to transaction ${transactionId}`,
+          },
         };
       }
 
@@ -428,24 +454,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           tags.map((id) => ({ id }))
         );
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Removed ${tags.length} tag(s) from transaction ${transactionId}`,
-            },
-          ],
+          structuredContent: {
+            success: true,
+            transactionId,
+            tags,
+            message: `Removed ${tags.length} tag(s) from transaction ${transactionId}`,
+          },
         };
       }
 
       case 'ping': {
         const result = await upClient.ping();
         return {
-          content: [
-            {
-              type: 'text',
-              text: result ? 'Connection successful' : 'Connection failed',
-            },
-          ],
+          structuredContent: {
+            success: result,
+            message: result ? 'Connection successful' : 'Connection failed',
+          },
         };
       }
 

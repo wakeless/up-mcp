@@ -91,4 +91,25 @@ describe('UpApiClient', () => {
       });
     });
   });
+
+  describe('pagination utilities', () => {
+    describe('extractCursor', () => {
+      it('should extract cursor from Up API URL', () => {
+        const url = 'https://api.up.com.au/api/v1/transactions?page[size]=20&page[after]=abc123';
+        const cursor = UpApiClient.extractCursor(url);
+        expect(cursor).toBe('abc123');
+      });
+
+      it('should return null for URL without cursor', () => {
+        const url = 'https://api.up.com.au/api/v1/transactions?page[size]=20';
+        const cursor = UpApiClient.extractCursor(url);
+        expect(cursor).toBeNull();
+      });
+
+      it('should return null for null input', () => {
+        const cursor = UpApiClient.extractCursor(null);
+        expect(cursor).toBeNull();
+      });
+    });
+  });
 });

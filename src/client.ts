@@ -22,6 +22,21 @@ export class UpApiClient {
   }
 
   /**
+   * Extract cursor from Up API pagination URL
+   * @param url The Up API URL containing page[after] parameter
+   * @returns The cursor value or null if not present
+   */
+  static extractCursor(url: string | null): string | null {
+    if (!url) return null;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.searchParams.get('page[after]');
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Get the headers required for Up API requests
    */
   getHeaders(): UpApiHeaders {
@@ -114,10 +129,15 @@ export class UpApiClient {
   /**
    * Get list of accounts
    */
-  async getAccounts() {
+  async getAccounts(params?: { cursor?: string }) {
     type AccountsResponse =
       paths['/accounts']['get']['responses'][200]['content']['application/json'];
-    return this.get<AccountsResponse>('/accounts');
+
+    const searchParams = new URLSearchParams();
+    if (params?.cursor) searchParams.append('page[after]', params.cursor);
+
+    const query = searchParams.toString();
+    return this.get<AccountsResponse>(`/accounts${query ? `?${query}` : ''}`);
   }
 
   /**
@@ -137,6 +157,7 @@ export class UpApiClient {
     since?: string;
     until?: string;
     pageSize?: number;
+    cursor?: string;
   }) {
     type TransactionsResponse =
       paths['/transactions']['get']['responses'][200]['content']['application/json'];
@@ -146,6 +167,7 @@ export class UpApiClient {
     if (params?.since) searchParams.append('filter[since]', params.since);
     if (params?.until) searchParams.append('filter[until]', params.until);
     if (params?.pageSize) searchParams.append('page[size]', params.pageSize.toString());
+    if (params?.cursor) searchParams.append('page[after]', params.cursor);
 
     const query = searchParams.toString();
     return this.get<TransactionsResponse>(`/transactions${query ? `?${query}` : ''}`);
@@ -169,6 +191,7 @@ export class UpApiClient {
       since?: string;
       until?: string;
       pageSize?: number;
+      cursor?: string;
     }
   ) {
     type AccountTransactionsResponse =
@@ -178,6 +201,7 @@ export class UpApiClient {
     if (params?.since) searchParams.append('filter[since]', params.since);
     if (params?.until) searchParams.append('filter[until]', params.until);
     if (params?.pageSize) searchParams.append('page[size]', params.pageSize.toString());
+    if (params?.cursor) searchParams.append('page[after]', params.cursor);
 
     const query = searchParams.toString();
     return this.get<AccountTransactionsResponse>(
@@ -186,7 +210,7 @@ export class UpApiClient {
   }
 
   /**
-   * Get list of categories
+   * Get list of categories (not paginated)
    */
   async getCategories(params?: { parent?: string }) {
     type CategoriesResponse =
@@ -224,12 +248,13 @@ export class UpApiClient {
   /**
    * Get list of tags
    */
-  async getTags(params?: { pageSize?: number }) {
+  async getTags(params?: { pageSize?: number; cursor?: string }) {
     type TagsResponse =
       paths['/tags']['get']['responses'][200]['content']['application/json'];
 
     const searchParams = new URLSearchParams();
     if (params?.pageSize) searchParams.append('page[size]', params.pageSize.toString());
+    if (params?.cursor) searchParams.append('page[after]', params.cursor);
 
     const query = searchParams.toString();
     return this.get<TagsResponse>(`/tags${query ? `?${query}` : ''}`);

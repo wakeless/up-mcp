@@ -9,8 +9,11 @@
 - 🏦 **Account Management**: List and retrieve Up bank accounts
 - 💰 **Transaction History**: Access transaction data with filtering options
 - 🏷️ **Categories & Tags**: Manage transaction categories and tags
+- 📄 **Cursor-Based Pagination**: Navigate through large result sets efficiently
+- 📊 **Structured Content**: All tools return typed JSON objects with output schemas
 - 🔐 **Secure Authentication**: Uses Up Personal Access Tokens
 - 📡 **MCP Compatible**: Works with any MCP-compatible client
+- ✅ **Comprehensive Testing**: 30+ tests covering unit and integration scenarios
 
 ## Available Tools
 
@@ -23,6 +26,9 @@ List all Up bank accounts for the authenticated user.
 
 **Parameters:**
 - `accountType` (optional): Filter by account type (`SAVER` or `TRANSACTIONAL`)
+- `cursor` (optional): Pagination cursor to fetch the next page of results
+
+**Returns:** Account list with pagination metadata (`nextCursor`, `prevCursor`)
 
 #### `get_account`
 Get details of a specific Up bank account by ID.
@@ -40,12 +46,17 @@ List transactions from Up bank accounts.
 - `since` (optional): Filter transactions after this date (ISO 8601)
 - `until` (optional): Filter transactions before this date (ISO 8601)
 - `pageSize` (optional): Number of records to return (max 100)
+- `cursor` (optional): Pagination cursor to fetch the next page of results
+
+**Returns:** Transaction list with pagination metadata (`nextCursor`, `prevCursor`)
 
 #### `get_transaction`
 Get details of a specific transaction by ID.
 
 **Parameters:**
 - `transactionId` (required): The unique identifier for the transaction
+
+**Returns:** Single transaction object
 
 #### `get_account_transactions`
 Get transactions for a specific account.
@@ -55,6 +66,9 @@ Get transactions for a specific account.
 - `since` (optional): Filter transactions after this date (ISO 8601)
 - `until` (optional): Filter transactions before this date (ISO 8601)
 - `pageSize` (optional): Number of records to return (max 100)
+- `cursor` (optional): Pagination cursor to fetch the next page of results
+
+**Returns:** Transaction list with pagination metadata (`nextCursor`, `prevCursor`)
 
 ### Category Tools
 
@@ -86,6 +100,9 @@ List all tags currently in use.
 
 **Parameters:**
 - `pageSize` (optional): Number of records to return
+- `cursor` (optional): Pagination cursor to fetch the next page of results
+
+**Returns:** Tag list with pagination metadata (`nextCursor`, `prevCursor`)
 
 #### `add_transaction_tags`
 Add one or more tags to a transaction.
@@ -94,6 +111,8 @@ Add one or more tags to a transaction.
 - `transactionId` (required): The transaction ID to tag
 - `tags` (required): Array of tag IDs to add (e.g., `["holiday", "dinner"]`)
 
+**Returns:** Success confirmation with operation details
+
 #### `remove_transaction_tags`
 Remove one or more tags from a transaction.
 
@@ -101,10 +120,36 @@ Remove one or more tags from a transaction.
 - `transactionId` (required): The transaction ID to untag
 - `tags` (required): Array of tag IDs to remove
 
+**Returns:** Success confirmation with operation details
+
 ### Utility Tools
 
 #### `ping`
 Test connectivity to the Up API.
+
+## Pagination
+
+Tools that return lists (`list_accounts`, `list_transactions`, `get_account_transactions`, `list_tags`) support cursor-based pagination:
+
+- Use the `cursor` parameter to navigate to a specific page
+- Each paginated response includes a `pagination` object with `nextCursor` and `prevCursor` fields
+- If `nextCursor` is `null`, you've reached the end of the results
+- If `prevCursor` is `null`, you're on the first page
+
+**Example pagination flow:**
+1. Call `list_transactions` without cursor → Get first page
+2. Check response `pagination.nextCursor`
+3. Call `list_transactions` with `cursor: nextCursor` → Get next page
+4. Repeat until `nextCursor` is `null`
+
+## Structured Content
+
+All tools return structured JSON objects via the `structuredContent` field:
+
+- **Type Safety**: Each tool has a defined `outputSchema` that validates responses
+- **Consistent Format**: Responses follow the JSON:API specification used by Up Banking
+- **Direct Access**: No need to parse JSON strings - data is returned as native objects
+- **Pagination Metadata**: Paginated responses include cursor information for easy navigation
 
 ## Prerequisites
 
